@@ -1,0 +1,106 @@
+name: Build Portable Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-portable:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libx11-dev \
+            libxft-dev \
+            libxrender-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libharfbuzz-dev \
+            libimlib2-dev \
+            zlib1g-dev \
+            ncurses-bin
+
+      - name: Compile not-st
+        run: |
+          make clean
+          make
+
+      - name: Create Portable Bundle
+        id: bundle
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          if [ -z "${VERSION}" ] || [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            VERSION=$(git describe --tags --always 2>/dev/null || echo "0.9.3")
+          fi
+          VERSION="${VERSION#v}"
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+          PKG_NAME="not-st-${VERSION}-linux-x86_64"
+          DIST_DIR="/tmp/${PKG_NAME}"
+          rm -rf "${DIST_DIR}"
+          mkdir -p "${DIST_DIR}/bin" "${DIST_DIR}/assets" "${DIST_DIR}/terminfo" "${DIST_DIR}/doc"
+
+          # Copiar binarios
+          cp st "${DIST_DIR}/bin/not-st"
+          chmod 755 "${DIST_DIR}/bin/not-st"
+          if [ -f tools/st-urlhandler ]; then
+            cp tools/st-urlhandler "${DIST_DIR}/bin/st-urlhandler"
+            chmod 755 "${DIST_DIR}/bin/st-urlhandler"
+          fi
+
+          # Assets
+          [ -f assets/st.desktop ] && cp assets/st.desktop "${DIST_DIR}/assets/"
+          [ -f assets/st.png ] && cp assets/st.png "${DIST_DIR}/assets/"
+
+          # Terminfo (compilado + fuente)
+          tic -sx -o "${DIST_DIR}/terminfo" st.info || true
+          cp st.info "${DIST_DIR}/"
+
+          # Documentacion
+          cp README.md LICENSE "${DIST_DIR}/doc/"
+          [ -f st.1 ] && cp st.1 "${DIST_DIR}/doc/"
+
+          # Scripts de instalacion
+          cp packaging/portable/install.sh "${DIST_DIR}/install.sh"
+          cp packaging/portable/uninstall.sh "${DIST_DIR}/uninstall.sh"
+          chmod +x "${DIST_DIR}/install.sh" "${DIST_DIR}/uninstall.sh"
+
+          # Comprimir tarball y calcular hash sha256
+          tar -czf "${PKG_NAME}.tar.gz" -C /tmp "${PKG_NAME}"
+          sha256sum "${PKG_NAME}.tar.gz" > "${PKG_NAME}.tar.gz.sha256"
+
+          echo "ARCHIVE=${PKG_NAME}.tar.gz" >> $GITHUB_OUTPUT
+          echo "CHECKSUM=${PKG_NAME}.tar.gz.sha256" >> $GITHUB_OUTPUT
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.bundle.outputs.ARCHIVE }}
+          path: |
+            ${{ steps.bundle.outputs.ARCHIVE }}
+            ${{ steps.bundle.outputs.CHECKSUM }}
+
+      - name: Publish to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.bundle.outputs.ARCHIVE }}
+            ${{ steps.bundle.outputs.CHECKSUM }}
+          draft: false
+          prerelease: false
