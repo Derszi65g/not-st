@@ -56,8 +56,8 @@ jobs:
           mkdir -p "${DIST_DIR}/bin" "${DIST_DIR}/assets" "${DIST_DIR}/terminfo" "${DIST_DIR}/doc"
 
           # Copiar binarios
-          cp st "${DIST_DIR}/bin/not-st"
-          chmod 755 "${DIST_DIR}/bin/not-st"
+          cp st "${DIST_DIR}/bin/st"
+          chmod 755 "${DIST_DIR}/bin/st"
           if [ -f tools/st-urlhandler ]; then
             cp tools/st-urlhandler "${DIST_DIR}/bin/st-urlhandler"
             chmod 755 "${DIST_DIR}/bin/st-urlhandler"
