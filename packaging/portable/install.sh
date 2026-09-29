@@ -24,14 +24,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # 1. Instalar binarios
 mkdir -p "${BIN_DIR}"
-if [ -f "${SCRIPT_DIR}/bin/st" ]; then
-    cp -f "${SCRIPT_DIR}/bin/st" "${BIN_DIR}/st"
-    chmod 755 "${BIN_DIR}/st"
-    echo "[OK] Binario instalado: ${BIN_DIR}/st"
-elif [ -f "${SCRIPT_DIR}/bin/not-st" ]; then
-    cp -f "${SCRIPT_DIR}/bin/not-st" "${BIN_DIR}/st"
-    chmod 755 "${BIN_DIR}/st"
-    echo "[OK] Binario instalado: ${BIN_DIR}/st"
+if [ -f "${SCRIPT_DIR}/bin/not-st" ]; then
+    cp -f "${SCRIPT_DIR}/bin/not-st" "${BIN_DIR}/not-st"
+    chmod 755 "${BIN_DIR}/not-st"
+    echo "[OK] Binario instalado: ${BIN_DIR}/not-st"
+elif [ -f "${SCRIPT_DIR}/bin/st" ]; then
+    cp -f "${SCRIPT_DIR}/bin/st" "${BIN_DIR}/not-st"
+    chmod 755 "${BIN_DIR}/not-st"
+    echo "[OK] Binario instalado: ${BIN_DIR}/not-st"
 fi
 
 if [ -f "${SCRIPT_DIR}/bin/st-urlhandler" ]; then

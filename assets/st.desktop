@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=st
+Name=not-st
 GenericName=Terminal Emulator
 Comment=A fast, modern and lightweight terminal emulator for X11 (Kitty alternative)
 Icon=st
-Exec=st
+Exec=not-st
 Terminal=false
 Categories=System;TerminalEmulator;
-Keywords=terminal;shell;prompt;command;kitty;st;
+Keywords=terminal;shell;prompt;command;kitty;st;not-st;
